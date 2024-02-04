@@ -1,1 +1,218 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+class Hero {
+private:
+    string name;
+    int level;
+    int xp;
+    int health;
+    int attack;
+    int gold;
+
+public:
+    Hero(string n) : name(n), level(1), xp(0), health(100), attack(10), gold(0) {}
+
+    void displayStats() const {
+        cout << "Name: " << name << endl;
+        cout << "Level: " << level << endl;
+        cout << "XP: " << xp << endl;
+        cout << "Health: " << health << endl;
+        cout << "Attack: " << attack << endl;
+        cout << "Gold: " << gold << endl;
+    }
+
+    void levelUp() {
+        level++;
+        attack += 5;
+        health += 20;
+        cout << "You leveled up! You are now level " << level << ".\n";
+    }
+
+    void gainXP(int xpGained) {
+        xp += xpGained;
+        if (xp >= level * 100)
+            levelUp();
+    }
+
+    void gainGold(int goldGained) {
+        gold += goldGained;
+    }
+
+    int getHealth() const {
+        return health;
+    }
+
+    int getAttack() const {
+        return attack;
+    }
+
+    int getGold() const {
+        return gold;
+    }
+
+    void restoreHealth(int amount) {
+        health += amount;
+    }
+};
+
+class Monster {
+private:
+    string name;
+    int health;
+    int attack;
+    int xp;
+    int gold;
+
+public:
+    Monster() {
+        string names[] = {"Goblin", "Orc", "Dragon", "Skeleton", "Zombie"};
+        int randIndex = rand() % 5;
+        name = names[randIndex];
+        health = rand() % 50 + 50; // Health between 50 and 100
+        attack = rand() % 10 + 5; // Attack between 5 and 15
+        xp = health + attack; // XP based on monster's strength
+        gold = rand() % 20 + 10; // Gold between 10 and 30
+    }
+
+    string getName() const {
+        return name;
+    }
+
+    int getHealth() const {
+        return health;
+    }
+
+    int getAttack() const {
+        return attack;
+    }
+
+    int getXP() const {
+        return xp;
+    }
+
+    int getGold() const {
+        return gold;
+    }
+
+    void takeDamage(int damage) {
+        health -= damage;
+    }
+};
+
+class Shop {
+public:
+    static void visitShop(Hero &hero) {
+        cout << "Welcome to the shop!\n";
+        cout << "You have " << hero.getGold() << " gold.\n";
+        cout << "1. Health Potion (50 gold) - Restores 30 health\n";
+        cout << "2. Attack Boost (50 gold) - Increases attack by 5\n";
+        cout << "3. Leave shop\n";
+
+        int choice;
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                if (hero.getGold() >= 50) {
+                    hero.restoreHealth(30);
+                    hero.gainGold(-50);
+                    cout << "You bought a Health Potion. Your health is now " << hero.getHealth() << ".\n";
+                } else {
+                    cout << "Not enough gold!\n";
+                }
+                break;
+            case 2:
+                if (hero.getGold() >= 50) {
+                    hero.gainGold(-50);
+                    hero.gainXP(50); // For demonstration, we're giving XP instead of directly increasing attack
+                    cout << "You bought an Attack Boost. You gained 50 XP.\n";
+                } else {
+                    cout << "Not enough gold!\n";
+                }
+                break;
+            case 3:
+                cout << "Leaving shop...\n";
+                break;
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+    }
+};
+
+void fight(Hero &hero, Monster &monster) {
+    cout << "A wild " << monster.getName() << " appears!\n";
+
+    while (hero.getHealth() > 0 && monster.getHealth() > 0) {
+        cout << "Your health: " << hero.getHealth() << " Monster's health: " << monster.getHealth() << endl;
+        cout << "1. Attack\n2. Flee\n";
+        int choice;
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                // Hero attacks monster
+                monster.takeDamage(hero.getAttack());
+                cout << "You attack the " << monster.getName() << " for " << hero.getAttack() << " damage.\n";
+                if (monster.getHealth() > 0) {
+                    // Monster attacks hero if still alive
+                    hero.restoreHealth(monster.getAttack());
+                    cout << "The " << monster.getName() << " attacks you for " << monster.getAttack() << " damage.\n";
+                }
+                break;
+            case 2:
+                cout << "You fled from the battle!\n";
+                return;
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+    }
+
+    if (hero.getHealth() > 0) {
+        cout << "You defeated the " << monster.getName() << "!\n";
+        hero.gainXP(monster.getXP());
+        hero.gainGold(monster.getGold());
+        cout << "You gained " << monster.getXP() << " experience points and " << monster.getGold() << " gold.\n";
+    } else {
+        cout << "You were defeated by the " << monster.getName() << ". Game Over!\n";
+    }
+}
+
+int main() {
+    srand(time(0)); // Seed random number generator
+
+    cout << "Welcome to Monster Arena!\n";
+    cout << "Enter your hero's name: ";
+    string heroName;
+    cin >> heroName;
+    Hero hero(heroName);
+    cout << "Get ready, " << heroName << "! The battle begins!\n";
+
+    while (hero.getHealth() > 0) {
+        Monster monster;
+        fight(hero, monster);
+        if (hero.getHealth() > 0) {
+            cout << "Do you want to continue battling or visit the shop? (1. Battle, 2. Shop, 3. Quit): ";
+            int choice;
+            cin >> choice;
+            switch (choice) {
+                case 1:
+                    cout << "Continuing battle...\n";
+                    break;
+                case 2:
+                    Shop::visitShop(hero);
+                    break;
+                case 3:
+                    cout << "Thanks for playing!\n";
+                    return 0;
+                default:
+                    cout << "Invalid choice. Continuing battle...\n";
+            }
+        }
+    }
+
+    cout << "Thanks for playing!\n";
+    return 0;
+}
 
